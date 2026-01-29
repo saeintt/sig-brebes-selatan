@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG Brebes Selatan</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 100vh; width: 100%; }
+        body { margin: 0; }
+        .info-box {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="info-box">
+        <b>Peta Brebes Selatan</b><br>
+        Klik wilayah untuk info
+    </div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Set pandangan ke Brebes Selatan
+        var map = L.map('map').setView([-7.2356, 109.0069], 11);
+
+        // Basemap Satelit
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+
+        // DAFTAR KECAMATAN BREBES SELATAN
+        var brebesSelatan = ["BUMIAYU", "PAGUYANGAN", "SIRAMPOG", "TONJONG", "BANTARKAWUNG", "SALEM"];
+
+        // MENGAMBIL DATA GEOJSON DARI SUMBER PUBLIK (Tunggu sebentar saat loading)
+        fetch('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-kecamatan.json')
+            .then(res => res.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    filter: function(feature) {
+                        // Memfilter hanya wilayah yang ada di list Brebes Selatan
+                        return brebesSelatan.includes(feature.properties.NAME_2.toUpperCase()) || 
+                               brebesSelatan.includes(feature.properties.NAME_3.toUpperCase());
+                    },
+                    style: function(feature) {
+                        return {
+                            fillColor: 'green',
+                            weight: 2,
+                            opacity: 1,
+                            color: 'white',
+                            fillOpacity: 0.4
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        layer.bindPopup("<b>Kecamatan: " + (feature.properties.NAME_3 || feature.properties.NAME_2) + "</b>");
+                        
+                        // Efek saat mouse lewat (Hover)
+                        layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.8 }); });
+                        layer.on('mouseout', function() { this.setStyle({ fillOpacity: 0.4 }); });
+                    }
+                }).addTo(map);
+            });
+    </script>
+</body>
+</html>
